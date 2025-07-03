@@ -119,6 +119,7 @@ export const deleteConnection = async (connectionId: string) => {
 
 export const searchUsers = async (searchTerm: string) => {
   try {
+    console.log('Searching for users with searchTerm:', searchTerm);
     const usersRef = collection(db, 'users');
     const q = query(
       usersRef,
@@ -126,7 +127,9 @@ export const searchUsers = async (searchTerm: string) => {
       where('displayName', '<', searchTerm + '\uf8ff')
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const results = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log('Search results:', results);
+    return results;
   } catch (error) {
     console.error('Error searching users:', error);
     return [];

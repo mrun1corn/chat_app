@@ -1,4 +1,3 @@
-
 'use client'
 import { useState, useEffect, useRef } from 'react';
 import { auth, db } from '../firebase';
@@ -7,7 +6,7 @@ import { sendConnectionRequest, acceptConnectionRequest, rejectConnectionRequest
 import { getUserProfile } from '../utils/userUtils';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
-import { Search, UserPlus, Check, X, Menu, MessageSquare, LogOut, ChevronLeft, ChevronRight, Send, User, Circle } from 'lucide-react';
+import { Search, UserPlus, Check, X, Menu, MessageSquare, LogOut, Send, User, Circle } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import Image from 'next/image';
 
@@ -23,22 +22,26 @@ export default function Chat() {
   const [selectedChat, setSelectedChat] = useState<any>(null);
   const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for sidebar visibility
-  const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false); // New state for search modal visibility
+  const [hasSearched, setHasSearched] = useState(false); // State to track if a search has been performed
 
-  const toggleSearch = () => {
-    setIsSearchVisible(prev => {
-      if (prev) { // If search was visible, clear search term and results
-        setSearchTerm('');
-        setSearchResults([]);
-      }
-      return !prev;
-    });
-  };
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  // Function to open/close the search modal and reset its state
+  const toggleSearchModal = () => {
+    setIsSearchModalOpen(prev => {
+      const newState = !prev;
+      // Reset search states when opening or closing the modal
+      setSearchTerm('');
+      setSearchResults([]);
+      setHasSearched(false);
+      return newState;
+    });
   };
 
   useEffect(() => {
@@ -156,11 +159,7 @@ export default function Chat() {
 
       const messagesWithUserData = fetchedMessages.map(msg => {
         const userData = usersMap.get(msg.uid);
-        return {
-          ...msg,
-          displayName: userData?.displayName || msg.displayName,
-          photoURL: userData?.photoURL || msg.photoURL,
-        };
+        return { ...msg, displayName: userData?.displayName || msg.displayName, photoURL: userData?.photoURL || msg.photoURL };
       });
 
       setMessages(messagesWithUserData);
@@ -173,11 +172,12 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Focus search input when search modal becomes visible
   useEffect(() => {
-    if (isSearchVisible && searchInputRef.current) {
+    if (isSearchModalOpen && searchInputRef.current) {
       searchInputRef.current.focus();
     }
-  }, [isSearchVisible]);
+  }, [isSearchModalOpen]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,9 +200,14 @@ export default function Chat() {
   };
 
   const handleSearch = async () => {
-    if (searchTerm.trim() === '') return;
-    const results = await searchUsers(searchTerm);
+    if (searchTerm.trim() === '') {
+      setSearchResults([]);
+      setHasSearched(false); // No search performed if term is empty
+      return;
+    }
+    const results = await searchUsers(searchTerm.trim()); // Ensure searchTerm is trimmed
     setSearchResults(results.filter((u: any) => u.id !== user?.uid));
+    setHasSearched(true); // A search has now been performed
   };
 
   const handleSendRequest = async (toUid: string) => {
@@ -258,8 +263,6 @@ export default function Chat() {
           </button>
         </div>
 
-        
-
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-lg font-semibold mb-3 flex items-center"><MessageSquare size={18} className="mr-2" />Pending Requests</h3>
           <div className="space-y-2">
@@ -311,7 +314,7 @@ export default function Chat() {
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col bg-background dark:bg-gray-900 transition-colors duration-300">
-        <header className="bg-primary dark:bg-gray-800 text-white p-4 shadow-md flex justify-between items-center relative z-20">
+        <header className="bg-primary dark:bg-gray-800 text-white p-4 shadow-md flex justify-between items-center w-full z-20 h-16">
           <div className="flex items-center">
             <button onClick={toggleSidebar} className="lg:hidden p-2 rounded-md text-white hover:bg-blue-700 dark:hover:bg-gray-700 mr-2">
               <Menu size={24} />
@@ -331,25 +334,13 @@ export default function Chat() {
           </div>
 
           <div className="flex items-center space-x-2">
-            <div className="relative flex items-center">
-              <button onClick={toggleSearch} className="p-2 rounded-md text-white hover:bg-blue-700 dark:hover:bg-gray-700 lg:hidden">
-                <Search size={24} />
-              </button>
-              <input
-                type="text"
-                placeholder="Search users..."
-                ref={searchInputRef}
-                className={`p-2 rounded-lg text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
-                  ${isSearchVisible ? 'block' : 'hidden'} lg:block`}
-              />
-              <button
-                onClick={handleSearch}
-                className={`ml-2 p-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white
-                  ${isSearchVisible ? 'block' : 'hidden'} lg:block`}
-              >
-                <Search size={20} />
-              </button>
-            </div>
+            {/* New Search User Button */}
+            <button
+              onClick={toggleSearchModal}
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center"
+            >
+              <Search size={18} className="mr-1" /><span className="hidden lg:inline">Search User</span>
+            </button>
 
             {user && (
               <>
@@ -369,6 +360,7 @@ export default function Chat() {
             )}
           </div>
         </header>
+        
 
         <main className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-gradient-to-br from-blue-50 dark:from-gray-800 to-purple-50 dark:to-gray-900">
           {selectedChat ? (
@@ -384,7 +376,7 @@ export default function Chat() {
                       alt="Profile" 
                       width={40}
                       height={40}
-                      className="w-10 h-10 rounded-full border-2 border-blue-400 dark:border-blue-600 object-cover shadow-md" 
+                      className="w-10 h-10 rounded-full object-cover border-2 border-blue-400 dark:border-blue-600 object-cover shadow-md" 
                     />
                   )}
                   <div 
@@ -428,27 +420,76 @@ export default function Chat() {
         )}
       </div>
 
-      {/* Search Results Overlay */}
-      {isSearchVisible && (
+      {/* Search Modal */}
+      {isSearchModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md relative">
-            <button onClick={toggleSearch} className="absolute top-3 right-3 p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <button onClick={toggleSearchModal} className="absolute top-3 right-3 p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
               <X size={24} />
             </button>
-            <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Search Results</h3>
+            <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Search Users</h3>
+            <div className="flex mb-4">
+              <input
+                type="text"
+                placeholder="Enter username..."
+                ref={searchInputRef}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch();
+                  }
+                }}
+                className="flex-1 p-2 rounded-l-lg text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 focus:outline-none"
+              />
+              <button
+                onClick={handleSearch}
+                className="p-2 rounded-r-lg bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Search size={20} className="text-white" />
+              </button>
+            </div>
+
             <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
-              {searchResults.length > 0 ? (
-                searchResults.map((result) => (
-                  <div key={result.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-md shadow-sm hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
-                    <p className="font-medium text-gray-900 dark:text-gray-100">{result.displayName}</p>
-                    <button
-                      onClick={() => handleSendRequest(result.id)}
-                      className="bg-green-500 hover:bg-green-600 text-white text-sm py-1 px-3 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center"
-                    >
-                      <UserPlus size={16} className="mr-1" />Connect
-                    </button>
-                  </div>
-                ))
+              {!hasSearched ? (
+                <p className="text-gray-500 dark:text-gray-400">Type a username to search.</p>
+              ) : searchResults.length > 0 ? (
+                searchResults.map((result) => {
+                  const isConnected = connections.some(conn =>
+                    (conn.user1Uid === user?.uid && conn.user2Uid === result.id) ||
+                    (conn.user2Uid === user?.uid && conn.user1Uid === result.id)
+                  );
+
+                  return (
+                    <div key={result.id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-md shadow-sm hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{result.displayName}</p>
+                      {isConnected ? (
+                        <button
+                          onClick={() => {
+                            const connection = connections.find(conn =>
+                              (conn.user1Uid === user?.uid && conn.user2Uid === result.id) ||
+                              (conn.user2Uid === user?.uid && conn.user1Uid === result.id)
+                            );
+                            if (connection) {
+                              setSelectedChat({ chatId: connection.id, otherUserUid: result.id, otherUserDisplayName: result.displayName });
+                              toggleSearchModal(); // Close search modal
+                            }
+                          }}
+                          className="bg-blue-500 hover:bg-blue-600 text-white text-sm py-1 px-3 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center"
+                        >
+                          <MessageSquare size={16} className="mr-1 text-white" />Message
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleSendRequest(result.id)}
+                          className="bg-green-500 hover:bg-green-600 text-white text-sm py-1 px-3 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center"
+                        >
+                          <UserPlus size={16} className="mr-1 text-white" />Connect
+                        </button>
+                      )}
+                    </div>
+                  );
+                })
               ) : (
                 <p className="text-gray-500 dark:text-gray-400">No users found.</p>
               )}

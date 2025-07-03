@@ -94,15 +94,14 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-blue-400 dark:from-gray-800 dark:to-black p-4">
+      <button 
+        onClick={() => router.push('/')} 
+        className="absolute top-4 right-4 p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 z-10"
+      >
+        <X size={24} />
+      </button>
       <div className="relative bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all duration-300 hover:scale-105 border border-gray-200 dark:border-gray-700 backdrop-filter backdrop-blur-lg bg-opacity-80 dark:bg-opacity-80">
-        <div className="absolute top-4 right-4 flex items-center space-x-2">
-          <button 
-            onClick={() => router.push('/')} 
-            className="p-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <X size={24} />
-          </button>
-        </div>
+        
         <h2 className="text-3xl font-extrabold text-gray-800 dark:text-white mb-6 text-center animate-fade-in">Set up your profile</h2>
         
         <div className="mb-4">
