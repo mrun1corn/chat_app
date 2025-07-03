@@ -242,17 +242,17 @@ export default function Chat() {
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden" 
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
           onClick={toggleSidebar}
         ></div>
       )}
 
       {/* Sidebar */}
-      <div 
-        className={`fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-40 
-          transform transition-transform duration-300 ease-in-out 
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
+      <div
+        className={`fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-40
+          transform transition-transform duration-300 ease-in-out
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:relative lg:translate-x-0 lg:w-1/4 lg:max-w-xs lg:flex`}
       >
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
@@ -292,33 +292,59 @@ export default function Chat() {
           <h3 className="text-lg font-semibold mb-3 flex items-center"><MessageSquare size={18} className="mr-2" />Connections</h3>
           <div className="space-y-2">
             {connections.map((connection) => (
-              <div 
-                key={connection.id} 
-                className={`flex items-center p-3 rounded-md shadow-sm cursor-pointer transition-colors duration-200 
+              <div
+                key={connection.id}
+                className={`flex items-center p-3 rounded-md shadow-sm cursor-pointer transition-colors duration-200
                   ${selectedChat?.chatId === connection.id ? 'bg-blue-100 dark:bg-blue-700' : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600'}`}
                 onClick={() => setSelectedChat({ chatId: connection.id, otherUserUid: connection.user1Uid === user?.uid ? connection.user2Uid : connection.user1Uid, otherUserDisplayName: connection.otherUserDisplayName })}
               >
-                <Image 
-                  src={connection.otherUserProfile?.photoURL || '/default-avatar.png'} 
-                  alt="Profile" 
+                <Image
+                  src={connection.otherUserProfile?.photoURL || '/default-avatar.png'}
+                  alt="Profile"
                   width={40}
                   height={40}
-                  className="w-10 h-10 rounded-full mr-3 object-cover border-2 border-blue-400 dark:border-blue-600" 
+                  className="w-10 h-10 rounded-full mr-3 object-cover border-2 border-blue-400 dark:border-blue-600"
                 />
                 <p className="font-medium">{connection.otherUserDisplayName}</p>
               </div>
             ))}
           </div>
         </div>
+
+        {/* Mobile User Actions (at the bottom of sidebar) */}
+        {user && (
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 lg:hidden">
+            <button
+              onClick={() => { router.push('/profile'); setIsSidebarOpen(false); }}
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center w-full justify-center mb-2"
+            >
+              <User size={18} className="mr-1" /><span>Edit Profile</span>
+            </button>
+            <button
+              onClick={() => { auth.signOut(); setIsSidebarOpen(false); }}
+              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center w-full justify-center"
+            >
+              <LogOut size={18} className="mr-1" /><span>Sign Out</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col bg-background dark:bg-gray-900 transition-colors duration-300">
-        <header className="bg-primary dark:bg-gray-800 text-white p-4 shadow-md flex justify-between items-center w-full z-20 h-16">
+        <header className="bg-primary dark:bg-gray-800 text-white p-4 shadow-md flex justify-between items-center w-full z-20">
           <div className="flex items-center">
             <button onClick={toggleSidebar} className="lg:hidden p-2 rounded-md text-white hover:bg-blue-700 dark:hover:bg-gray-700 mr-2">
               <Menu size={24} />
             </button>
+            {/* Mobile Search User Button */}
+            <button
+              onClick={toggleSearchModal}
+              className="lg:hidden p-2 rounded-md text-white hover:bg-blue-700 dark:hover:bg-gray-700 mr-2"
+            >
+              <Search size={24} />
+            </button>
+            
             <h1 className="text-2xl font-bold flex-1 text-center">
             {selectedChat ? (
               selectedChat.otherUserDisplayName
@@ -334,55 +360,55 @@ export default function Chat() {
           </div>
 
           <div className="flex items-center space-x-2">
-            {/* New Search User Button */}
+            {/* New Search User Button (Desktop Only) */}
             <button
               onClick={toggleSearchModal}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center"
+              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 items-center hidden lg:flex"
             >
-              <Search size={18} className="mr-1" /><span className="hidden lg:inline">Search User</span>
+              <Search size={18} className="mr-1" /><span>Search User</span>
             </button>
 
             {user && (
               <>
-                <button 
-                  onClick={() => router.push('/profile')} 
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center"
+                {/* Desktop User Buttons */}
+                <button
+                  onClick={() => router.push('/profile')}
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 items-center hidden lg:flex"
                 >
-                  <User size={18} className="mr-1" /><span className="hidden lg:inline">Edit Profile</span>
+                  <User size={18} className="mr-1" /><span>Edit Profile</span>
                 </button>
-                <button 
-                  onClick={() => auth.signOut()} 
-                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center"
+                <button
+                  onClick={() => auth.signOut()}
+                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 items-center hidden lg:flex"
                 >
-                  <LogOut size={18} className="mr-1" /><span className="hidden lg:inline">Sign Out</span>
+                  <LogOut size={18} className="mr-1" /><span>Sign Out</span>
                 </button>
               </>
             )}
           </div>
         </header>
-        
 
         <main className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-gradient-to-br from-blue-50 dark:from-gray-800 to-purple-50 dark:to-gray-900">
           {selectedChat ? (
             messages.map((msg) => (
-              <div 
-                key={msg.id} 
+              <div
+                key={msg.id}
                 className={`flex items-start ${msg.uid === user?.uid ? 'justify-end' : 'justify-start'}`}
               >
                 <div className={`flex items-center space-x-3 ${msg.uid === user?.uid ? 'flex-row-reverse space-x-reverse' : ''}`}>
                   {msg.photoURL && (
-                    <Image 
-                      src={`http://localhost:3001${msg.photoURL}`} 
-                      alt="Profile" 
+                    <Image
+                      src={`http://localhost:3001${msg.photoURL}`}
+                      alt="Profile"
                       width={40}
                       height={40}
-                      className="w-10 h-10 rounded-full object-cover border-2 border-blue-400 dark:border-blue-600 object-cover shadow-md" 
+                      className="w-10 h-10 rounded-full object-cover border-2 border-blue-400 dark:border-blue-600 object-cover shadow-md"
                     />
                   )}
-                  <div 
-                    className={`p-4 rounded-xl shadow-lg max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg break-words relative 
-                      ${msg.uid === user?.uid 
-                        ? 'bg-blue-500 text-white rounded-br-none animate-slide-in-right' 
+                  <div
+                    className={`p-4 rounded-xl shadow-lg max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg break-words relative
+                      ${msg.uid === user?.uid
+                        ? 'bg-blue-500 text-white rounded-br-none animate-slide-in-right'
                         : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none animate-slide-in-left'
                       }`}
                   >
@@ -410,8 +436,8 @@ export default function Chat() {
               placeholder="Type your message..."
               className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition duration-300 ease-in-out"
             />
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 flex items-center justify-center"
             >
               <Send size={20} />
