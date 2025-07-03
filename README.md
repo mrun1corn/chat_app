@@ -138,24 +138,13 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 ### Running the Application
 
-1.  **Start the backend server:**
+To start both the backend server and the Next.js frontend:
 
-    ```bash
-    cd server
-    npm start
-    # or
-    yarn start
-    cd ..
-    ```
-    The server will run on `http://localhost:3001`.
-
-2.  **Start the Next.js frontend:**
-
-    ```bash
-    npm run dev
-    # or
-    yarn dev
-    ```
+```bash
+npm run dev:all
+# or
+yarn dev:all
+```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
