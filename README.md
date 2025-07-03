@@ -43,12 +43,22 @@ Follow these instructions to get a copy of the project up and running on your lo
     cd ai_app
     ```
 
-2.  **Install dependencies:**
+2.  **Install frontend dependencies:**
 
     ```bash
     npm install
     # or
     yarn install
+    ```
+
+3.  **Install backend dependencies:**
+
+    ```bash
+    cd server
+    npm install
+    # or
+    yarn install
+    cd ..
     ```
 
 ### Firebase Setup
@@ -104,21 +114,7 @@ Follow these instructions to get a copy of the project up and running on your lo
         ```
 
 4.  **Set up Firebase Storage:**
-    - In your Firebase project, navigate to "Storage".
-    - Click "Get started" and follow the steps to set up your storage bucket.
-    - **Storage Security Rules:** Go to the "Rules" tab and ensure your rules allow authenticated users to upload profile pictures. A basic rule might look like this:
-
-        ```firestore
-        rules_version = '2';
-        service firebase.storage {
-          match /b/{bucket}/o {
-            match /profile-pics/{userId} {
-              allow read: if true; // Anyone can read profile pics
-              allow write: if request.auth != null && request.auth.uid == userId; // Only owner can write
-            }
-          }
-        }
-        ```
+    - **NOTE:** Firebase Storage is no longer used for profile pictures in this setup. Profile pictures are now handled by the local Node.js server.
 
 5.  **Get Firebase Configuration:**
     - In your Firebase project, go to "Project settings" (the gear icon next to "Project overview").
@@ -139,15 +135,27 @@ Follow these instructions to get a copy of the project up and running on your lo
         NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="YOUR_MEASUREMENT_ID"
         ```
     - Replace the placeholder values with your actual Firebase configuration.
-    - **Important:** The `apiKey` is the only one directly used from `process.env` in `src/app/firebase.ts`. The others are included for completeness in the `.env.local` example, but `firebase.ts` currently hardcodes them. For a more secure setup, you should update `firebase.ts` to use environment variables for all these values.
 
 ### Running the Application
 
-```bash
-npm run dev
-# or
-yarn dev
-```
+1.  **Start the backend server:**
+
+    ```bash
+    cd server
+    npm start
+    # or
+    yarn start
+    cd ..
+    ```
+    The server will run on `http://localhost:3001`.
+
+2.  **Start the Next.js frontend:**
+
+    ```bash
+    npm run dev
+    # or
+    yarn dev
+    ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
@@ -169,6 +177,9 @@ ai_app/
 │   │   ├───globals.css  # Global styles
 │   │   ├───layout.tsx   # Root layout
 │   │   └───page.tsx     # Main application page
+├───server/            # Node.js backend for image handling
+│   ├───index.js       # Backend server code
+│   └───package.json   # Backend dependencies
 ├───.gitignore         # Git ignore file
 ├───next-env.d.ts      # Next.js environment type definitions
 ├───next.config.mjs    # Next.js configuration

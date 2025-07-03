@@ -53,9 +53,22 @@ export default function Profile() {
         let profilePicUrl = auth.currentUser.photoURL;
 
         if (profilePic) {
-          const storageRef = ref(storage, `profile-pics/${auth.currentUser.uid}`);
-          await uploadBytes(storageRef, profilePic);
-          profilePicUrl = await getDownloadURL(storageRef);
+          const formData = new FormData();
+          formData.append('profilePic', profilePic);
+
+          const response = await fetch('http://localhost:3001/upload-profile-pic', {
+            method: 'POST',
+            headers: {
+              'x-user-id': auth.currentUser.uid, // Send UID for filename
+            },
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to upload profile picture.');
+          }
+          const data = await response.json();
+          profilePicUrl = `http://localhost:3001${data.url}`; // Construct full URL
         }
 
         await setDoc(userRef, {

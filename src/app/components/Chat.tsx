@@ -380,7 +380,7 @@ export default function Chat() {
                 <div className={`flex items-center space-x-3 ${msg.uid === user?.uid ? 'flex-row-reverse space-x-reverse' : ''}`}>
                   {msg.photoURL && (
                     <Image 
-                      src={msg.photoURL} 
+                      src={`http://localhost:3001${msg.photoURL}`} 
                       alt="Profile" 
                       width={40}
                       height={40}
